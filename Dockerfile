@@ -17,8 +17,14 @@ RUN apt-get update && apt-get install -y build-essential && \
 # Copiar el resto del código de la aplicación
 COPY . .
 
+# Instalar Gunicorn
+RUN pip install gunicorn
+
 # Exponer el puerto en el que se ejecutará la app (8000 para FastAPI)
 EXPOSE 8000
 
 # Comando para iniciar la aplicación
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Comando para iniciar la aplicación con Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
