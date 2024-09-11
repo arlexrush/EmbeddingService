@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Body
+from fastapi.responses import JSONResponse
 from sentence_transformers import SentenceTransformer
 import numpy as np
 import asyncio
@@ -21,13 +22,23 @@ executor = concurrent.futures.ThreadPoolExecutor()
 @app.post("/generate-embeddings")
 async def generate_embeddings(text: str = Body(..., embed=True)):
     # Define a function to generate the embeddings
-    def generate_embeddings_sync(text):
-        #embeddings = await asyncio.to_thread(model.encode, text, convert_to_numpy=True)
-        embeddings = model.encode(text, convert_to_numpy=True)
-        return embeddings.tolist()
-
+    async def generate_embeddings_sync(text):
+        try:
+            embeddings = await asyncio.to_thread(model.encode, text, convert_to_numpy=True)
+            #embeddings = model.encode(text, convert_to_numpy=True)
+            return {"embeddings": embeddings.tolist()} 
+                    #embeddings.tolist()
+        except Exception as e:
+            return {"error": f"Error generating embeddings: {str(e)}"}
+        
    # Generate the embeddings asynchronously
     loop = asyncio.get_running_loop()
-    embeddings = await loop.run_in_executor(executor, generate_embeddings_sync, text)
+    result = await loop.run_in_executor(executor, generate_embeddings_sync, text)
+    #embeddings = await loop.run_in_executor(executor, generate_embeddings_sync, text)
 
-    return {"embeddings": embeddings}
+    return  result
+            #{"embeddings": embeddings}
+            
+@app.exception_handler(Exception)
+async def exception_handler(request, exc):
+    return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
