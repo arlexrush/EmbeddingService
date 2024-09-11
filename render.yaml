@@ -1,0 +1,10 @@
+# Exported from Render on 2024-09-11T21:21:03Z
+services:
+- type: web
+  name: embedding-service:latest
+  runtime: image
+  image:
+    url: docker.io/arlexrush/arlexrush/embedding-service:latest
+  plan: free
+  region: frankfurt
+version: "1"
