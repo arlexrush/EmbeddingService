@@ -21,11 +21,11 @@ COPY . .
 RUN pip install gunicorn
 
 # Exponer el puerto en el que se ejecutará la app (8000 para FastAPI)
-EXPOSE 8000
+EXPOSE 8080
 
 # Comando para iniciar la aplicación
 #CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Comando para iniciar la aplicación con Gunicorn
 #CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "-w", "4", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "-w", "4", "main:app"]
