@@ -27,5 +27,5 @@ EXPOSE 8080
 #CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Comando para iniciar la aplicación con Gunicorn
-#CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8080", "-w", "4", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "main:app"]
+#CMD ["gunicorn", "--bind", "0.0.0.0:8080", "-w", "4", "main:app"]
