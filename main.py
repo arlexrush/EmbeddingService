@@ -17,14 +17,11 @@ app = FastAPI()
 # Load the pre-trained sentence transformer model
 model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
-tokenizer = AutoTokenizer.from_pretrained('paraphrase-multilingual-mpnet-base-v2')
-tokens = tokenizer.tokenize("Tu texto aquí", clean_up_tokenization_spaces=False)
-
-# Create a thread pool executor
-executor = concurrent.futures.ThreadPoolExecutor()
+#tokenizer = AutoTokenizer.from_pretrained('paraphrase-multilingual-mpnet-base-v2')
+#tokens = tokenizer.tokenize("Tu texto aquí", clean_up_tokenization_spaces=False)
 
 @app.post("/generate-embeddings")
-async def generate_embeddings(text: str = Body(..., embed=True)):
+async def generate_embeddings(text: str = Body(...)):
     # Define a function to generate the embeddings
     async def generate_embeddings_sync(text):
         try:
