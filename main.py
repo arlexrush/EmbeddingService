@@ -1,45 +1,39 @@
-from fastapi import FastAPI, Body
-from fastapi.responses import JSONResponse
+import os
+import uvicorn
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
-from transformers import AutoTokenizer
-import numpy as np
 import asyncio
-import concurrent.futures
 
-
-
-# Crear el ThreadPoolExecutor a nivel global
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=10)
-
-# Inicializar la app FastAPI
 app = FastAPI()
 
-# Load the pre-trained sentence transformer model
-model = SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
+# Modelo para validar la entrada de datos en el cuerpo
+class TextInput(BaseModel):
+    text: str
 
-#tokenizer = AutoTokenizer.from_pretrained('paraphrase-multilingual-mpnet-base-v2')
-#tokens = tokenizer.tokenize("Tu texto aquí", clean_up_tokenization_spaces=False)
+# Carga el modelo de forma asíncrona
+async def load_model():
+    return SentenceTransformer('paraphrase-multilingual-mpnet-base-v2')
 
-@app.post("/generate-embeddings")
-async def generate_embeddings(text: str = Body(...)):
-    # Define a function to generate the embeddings
-    async def generate_embeddings_sync(text):
-        try:
-            embeddings = await asyncio.to_thread(model.encode, text, convert_to_numpy=True)
-            #embeddings = model.encode(text, convert_to_numpy=True)
-            return {"embeddings": embeddings.tolist()} 
-                    #embeddings.tolist()
-        except Exception as e:
-            return {"error": f"Error generating embeddings: {str(e)}"}
-        
-   # Generate the embeddings asynchronously
-    loop = asyncio.get_running_loop()
-    result = await loop.run_in_executor(executor, generate_embeddings_sync, text)
-    #embeddings = await loop.run_in_executor(executor, generate_embeddings_sync, text)
+model = None
 
-    return  result
-            #{"embeddings": embeddings}
-            
-@app.exception_handler(Exception)
-async def exception_handler(request, exc):
-    return JSONResponse(status_code=500, content={"message": "Internal Server Error"})
+@app.on_event("startup")
+async def startup_event():
+    global model
+    model = await load_model()
+
+@app.post("/embed")
+async def generate_embedding(input_Data: TextInput):
+    if not model:
+        raise HTTPException(status_code=503, detail="Model not loaded")
+    
+    try:
+        embedding = await asyncio.to_thread(model.encode, input_Data.text)
+        return {"embedding": embedding.tolist()}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating embedding: {str(e)}")
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8080))  # Usar el puerto de la variable de entorno PORT
+    print(f"Server will run on port: {port}")  # Imprime el valor de 'port'
+    uvicorn.run(app, host="0.0.0.0", port=port)
